@@ -36,10 +36,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        detailsContactsBtn = findViewById(R.id.details_con_btn);
-        contactsBtn = findViewById(R.id.contact_id);
-        callBtn = findViewById(R.id.call_btn);
-        textView = findViewById(R.id.result);
+        detailsContactsBtn = findViewById(R.id.detailsbtn);
+        contactsBtn = findViewById(R.id.contactbtn);
+        callBtn = findViewById(R.id.callbtn);
+        textView = findViewById(R.id.detail);
 
         callBtn.setEnabled(false);
         detailsContactsBtn.setEnabled(false);
