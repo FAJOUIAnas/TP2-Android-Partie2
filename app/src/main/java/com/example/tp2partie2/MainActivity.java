@@ -3,10 +3,8 @@ package com.example.tp2partie2;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -20,96 +18,118 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int PICK_CONTACT_REQUEST = 1;
+    int PICK_CONTACT_REQUEST=1;
+    int Perm_CTC = 1;
+    int CALL_Perm = 1;
 
+    Button detailsContactsBtn;
+    Button contactsBtn;
+    Button callBtn;
     TextView textView;
-    private static final int Perm_CTC = 1;
-    Button buttonCall;
-    String name;
+
+    String contactId;
     String phoneNumber;
-    private static final int PERMISSION_CALL_PHONE_REQUEST_CODE = 1;
+    String name;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button pickContactButton = findViewById(R.id.button_contact);
-        textView = findViewById(R.id.text_view);
+        detailsContactsBtn = findViewById(R.id.details_con_btn);
+        contactsBtn = findViewById(R.id.contact_id);
+        callBtn = findViewById(R.id.call_btn);
+        textView = findViewById(R.id.result);
 
+        callBtn.setEnabled(false);
+        detailsContactsBtn.setEnabled(false);
 
-        pickContactButton.setOnClickListener(view -> {
-            Intent pickContactIntent = new Intent(Intent.ACTION_PICK, Uri.parse("content://contacts/people"));
-            startActivityForResult(pickContactIntent, PICK_CONTACT_REQUEST);
-        });
-
-        Button detailContactButton = findViewById(R.id.detailsContact);
-        detailContactButton.setOnClickListener(new View.OnClickListener() {
+        contactsBtn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                Intent pickContactIntent = new Intent(Intent.ACTION_PICK, Uri.parse("content://contacts"));
-                pickContactIntent.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE); // Show user only contacts w/ phone numbers
-                startActivityForResult(pickContactIntent, PICK_CONTACT_REQUEST);
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_PICK,
+                        ContactsContract.Contacts.CONTENT_URI);
+
+                if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_CONTACTS}, Perm_CTC);
+                } else {
+                    startActivityForResult(intent, PICK_CONTACT_REQUEST);
+                }
+            }
+        });
+
+        detailsContactsBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String toSet = "Contact: " + name + ", phone number: " + phoneNumber;
+                textView.setText(toSet);
+                callBtn.setEnabled(true);
+            }
+        });
+
+        callBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Uri phoneUri = Uri.parse("tel:" + phoneNumber);
+                Intent intent = new Intent(Intent.ACTION_CALL);
+                intent.setData(phoneUri);
+                if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CALL_PHONE}, CALL_Perm);
+                } else {
+                    startActivity(intent);
+                }
+                startActivity(intent);
             }
         });
     }
 
-
-    @SuppressLint("Range")
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == PICK_CONTACT_REQUEST) {
-            if (resultCode == RESULT_CANCELED) {
-                textView.setText("Opération annulée");
-            }
-            if (resultCode == RESULT_OK) {
-                String contactUri = data.getDataString();
-
-                Uri uriContact = data.getData();
-                Cursor cursor = getContentResolver().query(uriContact, null, null, null, null);
-                if (cursor.moveToFirst()) {
-                    name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-
-                    String contactId = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
-
-                    Cursor cursorPhone = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
-                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[] { contactId }, null);
-
-                    if (cursorPhone.moveToFirst()) {
-                        phoneNumber = cursorPhone.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                    }
-                    cursorPhone.close();
-                }
-                cursor.close();
-                textView.setText(contactUri);
-            }
-        }
-    }
-    public void appelNumber() {
-        Intent callIntent = new Intent(Intent.ACTION_CALL);
-        callIntent.setData(Uri.parse("tel:" + phoneNumber));
-        if (callIntent.resolveActivity(getPackageManager()) != null) {
-            startActivity(callIntent);
-        }
-    }
-    public void onClick(View view) {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CALL_PHONE}, PERMISSION_CALL_PHONE_REQUEST_CODE);
-        } else {
-            appelNumber();
-        }
-    }
-
-
-
-
-    @Override public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[]
+            permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == Perm_CTC) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "GRANTED CALL", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "PERMISSION GRANTED", Toast.LENGTH_SHORT).show();
             }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 1)
+        {
+            Uri contactUri = data.getData();
+            String[] projection = {ContactsContract.CommonDataKinds.Phone.NUMBER, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, ContactsContract.CommonDataKinds.Phone.CONTACT_ID};
+
+            String[] segments = contactUri.toString().split("/");
+            String id = segments[segments.length - 1];
+
+            Cursor cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, projection, null, null, null);
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast())
+            {
+                int cid = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID);
+                contactId = cursor.getString(cid);
+
+                if (contactId.equals(id))
+                {
+                    int column = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+                    phoneNumber = cursor.getString(column);
+
+                    int column_name = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
+                    name = cursor.getString(column_name);
+
+                    detailsContactsBtn.setEnabled(true);
+                    textView.setText(contactId);
+
+                }
+                cursor.moveToNext();
+            }
+            cursor.close();
         }
     }
 }
