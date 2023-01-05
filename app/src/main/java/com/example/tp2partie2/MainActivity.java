@@ -36,8 +36,6 @@ public class MainActivity extends AppCompatActivity {
 
         Button pickContactButton = findViewById(R.id.button_contact);
         textView = findViewById(R.id.text_view);
-        //buttonCall.findViewById(R.id.buttonCall);
-        //buttonCall.setEnabled(false);
 
 
         pickContactButton.setOnClickListener(view -> {
@@ -54,10 +52,6 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(pickContactIntent, PICK_CONTACT_REQUEST);
             }
         });
-
-
-
-
     }
 
 
@@ -71,38 +65,24 @@ public class MainActivity extends AppCompatActivity {
             }
             if (resultCode == RESULT_OK) {
                 String contactUri = data.getDataString();
-                // Récupération du nom et du numéro de téléphone du contact à partir de la base de données de contacts
 
                 Uri uriContact = data.getData();
-                // Interroger la base de données de contacts
                 Cursor cursor = getContentResolver().query(uriContact, null, null, null, null);
                 if (cursor.moveToFirst()) {
-                    // Obtenir le nom du contact
                     name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
 
-                    // Obtenir l'ID du contact
                     String contactId = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
 
-                    // Interroger la base de données de numéros de téléphone
                     Cursor cursorPhone = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
                             ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[] { contactId }, null);
 
                     if (cursorPhone.moveToFirst()) {
-                        // Obtenir le numéro de téléphone
                         phoneNumber = cursorPhone.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                     }
                     cursorPhone.close();
                 }
                 cursor.close();
-
-                // Mise à jour du texte de la TextView avec le nom et le numéro de téléphone du contact
-                //textView.setText(contactUri);
                 textView.setText(contactUri);
-
-
-
-
-
             }
         }
     }
@@ -114,12 +94,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     public void onClick(View view) {
-        // Vérifier si la permission a été accordée
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-            // Si la permission n'a pas été accordée, demander à l'utilisateur de l'accorder
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CALL_PHONE}, PERMISSION_CALL_PHONE_REQUEST_CODE);
         } else {
-            // Si la permission a été accordée, appeler le numéro de téléphone
             appelNumber();
         }
     }
@@ -129,9 +106,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        //check the permission type using the requestCode
         if (requestCode == Perm_CTC) {
-            //the array is empty if not granted
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "GRANTED CALL", Toast.LENGTH_SHORT).show();
             }
